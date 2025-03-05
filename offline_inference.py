@@ -7,12 +7,14 @@ from stepaudio import StepAudio
 def main():
     parser = argparse.ArgumentParser(description="StepAudio Offline Inference")
     parser.add_argument(
-        "--model-path", type=str, required=True, help="Base path for model files"
+        "--model-path", type=str, required=True,
+        help="Base path for model files"
     )
     parser.add_argument(
-        "--output-path", type=str, required=True, help="Base path for response audio files"
+        "--output-path", type=str, required=True,
+        help="Base path for response audio files"
     )
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     model = StepAudio(
         tokenizer_path=f"{args.model_path}/Step-Audio-Tokenizer",
