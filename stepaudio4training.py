@@ -57,7 +57,7 @@ class StepAudio:
         try:
             for token in output_token_ids:
                 print(token)
-        except Exception e:
+        except Exception as e:
             print(e)
         print("$" * 80)
         print("output_token_ids:", output_token_ids)
