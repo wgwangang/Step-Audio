@@ -63,10 +63,14 @@ def main():
             peft_config = LoraConfig(
                 task_type=TaskType.CAUSAL_LM,
                 inference_mode=False,
+                target_modules=["q_proj",
+                                "k_proj",
+                                "v_proj",
+                                ]
                 r=8,
                 lora_alpha=32,
                 lora_dropout=0.1,)
-            model1 = get_peft_model(model, peft_config)
+            model1 = get_peft_model(model.llm, peft_config)
             model1.print_trainable_parameters()
 
         time.sleep(3000)
