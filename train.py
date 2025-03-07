@@ -1,11 +1,27 @@
 import argparse
 import os
 import time
+import torch
 import torchaudio
+
 from stepaudio4training import StepAudio
+
+from transformers import get_linear_schedule_with_warmup
 
 from peft import LoraConfig, TaskType, get_peft_model
 
+input_ids = [[   1,     4,  28504,    78,  1027,  922,   325, 22227,  1027, 20623,
+           325,   676,  2120,   503,   684,   325,  1027,  2120,  3559,  9772,
+          1216,     3,     4, 56446,    78,   1027,  922,   325,   503,   684,
+           325,   676,  2120,   503,  2572, 330]]
+
+input_ids = torch.tensor(input_ids)
+
+batch = {
+    "input_ids": input_ids,
+    "attention_mask": torch.ones_like(input_ids),
+    "labels": input_ids,
+    }
 
 def main():
     parser = argparse.ArgumentParser(description="StepAudio Offline Inference")
@@ -66,12 +82,44 @@ def main():
                 target_modules=["q_proj",
                                 "k_proj",
                                 "v_proj",
-                                ]
+                                ],
                 r=8,
                 lora_alpha=32,
                 lora_dropout=0.1,)
             model1 = get_peft_model(model.llm, peft_config)
             model1.print_trainable_parameters()
+
+            # optimizer
+            optimizer = torch.optim.AdamW(model1.parameters(), lr=0.0001)
+
+            num_epochs = 20
+            step_num_per_epoch = 100
+
+            # lr scheduler
+            lr_scheduler = get_linear_schedule_with_warmup(
+                optimizer=optimizer,
+                num_warmup_steps=0,
+                num_training_steps=step_num_per_epoch * num_epochs,
+            )
+
+            device = "cuda"
+            model1 = model1.to(device)
+            batch = {k: v.to(device) for k, v in batch.items()}
+
+            global_step = 0
+            for _ in range(num_epochs * step_num_per_epoch):
+                model1.train()
+                outputs = model1(**batch)
+                loss = outputs.loss
+                loss.backward()
+                optimizer.step()
+                lr_scheduler.step()
+                # Update the importance of low-rank matrices
+                # and allocate the budget accordingly.
+                model1.base_model.update_and_allocate(global_step)
+                optimizer.zero_grad()
+                global_step += 1
+                print(loss)
 
         time.sleep(3000)
         i += 1

@@ -32,6 +32,13 @@ class StepAudio:
         volumn_ratio: float = 1.0,
     ):
         text_with_audio = self.apply_chat_template(messages)
+
+        training_token_ids = self.llm_tokenizer(text_with_audio, return_tensors="pt")
+        print("type of training_token_ids: ", type(training_token_ids))
+        print(training_token_ids)
+        print("=" * 80)
+
+
         token_ids = self.llm_tokenizer.encode(text_with_audio, return_tensors="pt")
 
         print("type of token_ids: ", type(token_ids), token_ids.shape)
