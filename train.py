@@ -2,7 +2,9 @@ import argparse
 import os
 import time
 import torchaudio
-from stepaudio import StepAudio
+from stepaudio4training import StepAudio
+
+from peft import LoraConfig, TaskType, get_peft_model
 
 
 def main():
@@ -28,6 +30,7 @@ def main():
         os.makedirs(output_path, exist_ok=True)
 
     # example for text input
+    i = 0
     while (True):
         input_text = "你好，我是你的朋友，我叫小明，你叫什么名字？"
         text, audio, sr = model(
@@ -56,9 +59,18 @@ def main():
         torchaudio.save(response_audio_path2, audio, sr)
         # torchaudio.save("output/output_e2e_aqta.wav", audio, sr)
 
-        time.sleep(300)
+        if i == 0:
+            peft_config = LoraConfig(
+                task_type=TaskType.CAUSAL_LM,
+                inference_mode=False,
+                r=8,
+                lora_alpha=32,
+                lora_dropout=0.1,)
+            model1 = get_peft_model(model, peft_config)
+            model1.print_trainable_parameters()
 
-
+        time.sleep(3000)
+        i += 1
 
 if __name__ == "__main__":
     main()
