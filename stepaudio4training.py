@@ -34,7 +34,7 @@ class StepAudio:
         text_with_audio = self.apply_chat_template(messages)
         token_ids = self.llm_tokenizer.encode(text_with_audio, return_tensors="pt")
 
-        print("type of token_ids: ", type(token_ids))
+        print("type of token_ids: ", type(token_ids), token_ids.shape)
         print("=" * 80)
         print("token_ids:")
         try:
